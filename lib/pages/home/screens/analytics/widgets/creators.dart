@@ -1,75 +1,55 @@
 import "package:flutter/material.dart";
-import "package:get/get.dart";
 import "package:hugeicons/hugeicons.dart";
 import "package:keeper/core/widgets/ui/app_icon.dart";
 
-class Creators extends GetView {
+class Creators extends StatelessWidget {
+  const Creators({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        GestureDetector(
-          child: Container(
-            padding: EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              border: BoxBorder.all(width: 1.5, color: Colors.orange),
-              borderRadius: BorderRadius.circular(7),
-              color: Colors.white,
-            ),
-            child: AppIcon(
-              HugeIcons.strokeRoundedInvoice,
-              size: 35,
-              color: Colors.orange,
-            ),
-          ),
+        _buildActionButton(
+          icon: HugeIcons.strokeRoundedInvoice,
+          color: Colors.orange,
+          onTap: () {},
         ),
-        GestureDetector(
-          child: Container(
-            padding: EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              border: BoxBorder.all(width: 1.5, color: Colors.lightGreen),
-              borderRadius: BorderRadius.circular(7),
-              color: Colors.white,
-            ),
-            child: AppIcon(
-              HugeIcons.strokeRoundedUserAdd01,
-              size: 30,
-              color: Colors.lightGreen,
-            ),
-          ),
+        _buildActionButton(
+          icon: HugeIcons.strokeRoundedUserAdd01,
+          color: Colors.lightGreen,
+          onTap: () {},
         ),
-        GestureDetector(
-          child: Container(
-            padding: EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              border: BoxBorder.all(width: 1.5, color: Color(0xFF1E90FF)),
-              borderRadius: BorderRadius.circular(7),
-              color: Colors.white,
-            ),
-            child: AppIcon(
-              HugeIcons.strokeRoundedMoneyAdd02,
-              size: 30,
-              color: Color(0xFF1E90FF),
-            ),
-          ),
+        _buildActionButton(
+          icon: HugeIcons.strokeRoundedMoneyAdd02,
+          color: const Color(0xFF1E90FF),
+          onTap: () {},
         ),
-        GestureDetector(
-          child: Container(
-            padding: EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              border: BoxBorder.all(width: 1.5, color: Colors.deepOrange),
-              borderRadius: BorderRadius.circular(7),
-              color: Colors.white,
-            ),
-            child: AppIcon(
-              HugeIcons.strokeRoundedInvoice01,
-              size: 30,
-              color: Colors.deepOrangeAccent,
-            ),
-          ),
+        _buildActionButton(
+          icon: HugeIcons.strokeRoundedInvoice01,
+          color: Colors.deepOrange,
+          onTap: () {},
         ),
       ],
+    );
+  }
+
+  Widget _buildActionButton({
+    required dynamic icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          border: Border.all(width: 2, color: color),
+          borderRadius: BorderRadius.circular(12),
+          color: Colors.white,
+        ),
+        child: AppIcon(icon, size: 28, color: color),
+      ),
     );
   }
 }

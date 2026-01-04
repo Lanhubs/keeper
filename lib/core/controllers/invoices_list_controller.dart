@@ -2,36 +2,21 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:keeper/core/controllers/invoices_list_controller.dart';
 
-class HomeController extends GetxController {
+class InvoicesListController extends GetxController {
   final box = Hive.box("Invoices");
 
-  final RxInt _currentIndex = 0.obs;
-  int get currentIndex => _currentIndex.value;
-  final showFloatingMenu = false.obs;
-
-  // Invoice data
   final RxList<Map<String, dynamic>> allInvoices = <Map<String, dynamic>>[].obs;
   final RxList<Map<String, dynamic>> filteredInvoices =
       <Map<String, dynamic>>[].obs;
   final RxString selectedCategory = 'Paid'.obs;
   final RxString searchQuery = ''.obs;
-
-  // Dashboard stats
-  final RxInt totalInvoices = 0.obs;
-  final RxDouble totalAmount = 0.0.obs;
-  final RxDouble paidAmount = 0.0.obs;
-  final RxDouble pendingAmount = 0.0.obs;
-  final RxDouble overdueAmount = 0.0.obs;
+  final RxBool isLoading = false.obs;
 
   // Category counts
   final RxInt paidCount = 0.obs;
   final RxInt pendingCount = 0.obs;
   final RxInt overdueCount = 0.obs;
-
-  // Loading state
-  final RxBool isLoading = false.obs;
 
   @override
   void onInit() {
@@ -42,30 +27,14 @@ class HomeController extends GetxController {
   @override
   void onReady() {
     super.onReady();
-    // Refresh data when returning to home
-    ever(allInvoices, (_) => _calculateStats());
+    // Refresh whenever the controller becomes active
+    ever(_refreshTrigger, (_) => loadInvoices());
   }
 
-  void changeIndex(int index) {
-    _currentIndex.value = index;
+  final RxInt _refreshTrigger = 0.obs;
 
-    // Refresh data when switching tabs
-    if (index == 0) {
-      loadInvoices(); // Refresh home when navigating to home tab
-    } else if (index == 1) {
-      // Refresh invoices list when navigating to invoices tab
-      try {
-        final invoicesListController = Get.find<InvoicesListController>();
-        invoicesListController.refreshData();
-      } catch (e) {
-        debugPrint('InvoicesListController not found: $e');
-      }
-    }
-  }
-
-  void toggleFloatingMenu() {
-    showFloatingMenu.value = !showFloatingMenu.value;
-    update();
+  void triggerRefresh() {
+    _refreshTrigger.value++;
   }
 
   Future<void> loadInvoices() async {
@@ -88,7 +57,7 @@ class HomeController extends GetxController {
       } else {
         allInvoices.value = [];
       }
-      _calculateStats();
+      _calculateCounts();
       filterByCategory(selectedCategory.value);
     } catch (e) {
       debugPrint('Error loading invoices: $e');
@@ -98,51 +67,28 @@ class HomeController extends GetxController {
     }
   }
 
-  void _calculateStats() {
-    totalInvoices.value = allInvoices.length;
-
-    double total = 0;
-    double paid = 0;
-    double pending = 0;
-    double overdue = 0;
-    int paidC = 0;
-    int pendingC = 0;
-    int overdueC = 0;
+  void _calculateCounts() {
+    int paid = 0;
+    int pending = 0;
+    int overdue = 0;
 
     for (var invoice in allInvoices) {
-      final items = invoice['items'] as List<dynamic>? ?? [];
-      double invoiceTotal = 0;
-
-      for (var item in items) {
-        final subTotal = (item['subTotal'] ?? 0).toDouble();
-        invoiceTotal += subTotal;
-      }
-
-      total += invoiceTotal;
-
       final status = (invoice['status'] ?? 'pending').toString().toLowerCase();
       switch (status) {
         case 'paid':
-          paid += invoiceTotal;
-          paidC++;
+          paid++;
           break;
         case 'overdue':
-          overdue += invoiceTotal;
-          overdueC++;
+          overdue++;
           break;
         default:
-          pending += invoiceTotal;
-          pendingC++;
+          pending++;
       }
     }
 
-    totalAmount.value = total;
-    paidAmount.value = paid;
-    pendingAmount.value = pending;
-    overdueAmount.value = overdue;
-    paidCount.value = paidC;
-    pendingCount.value = pendingC;
-    overdueCount.value = overdueC;
+    paidCount.value = paid;
+    pendingCount.value = pending;
+    overdueCount.value = overdue;
   }
 
   void filterByCategory(String category) {
@@ -159,7 +105,6 @@ class HomeController extends GetxController {
       }).toList();
     }
 
-    // Apply search filter if exists
     if (searchQuery.value.isNotEmpty) {
       searchInvoices(searchQuery.value);
     }
@@ -177,14 +122,9 @@ class HomeController extends GetxController {
     filteredInvoices.value = allInvoices.where((invoice) {
       final title = (invoice['title'] ?? '').toString().toLowerCase();
       final id = (invoice['id'] ?? '').toString().toLowerCase();
-      final customerName = (invoice['customer']?['name'] ?? '')
-          .toString()
-          .toLowerCase();
 
       final matchesSearch =
-          title.contains(lowerQuery) ||
-          id.contains(lowerQuery) ||
-          customerName.contains(lowerQuery);
+          title.contains(lowerQuery) || id.contains(lowerQuery);
 
       if (selectedCategory.value.toLowerCase() == 'all') {
         return matchesSearch;
@@ -195,16 +135,16 @@ class HomeController extends GetxController {
     }).toList();
   }
 
-  String formatAmount(double amount) {
-    if (amount >= 1000000) {
-      return '${(amount / 1000000).toStringAsFixed(1)}M';
-    } else if (amount >= 1000) {
-      return '${(amount / 1000).toStringAsFixed(1)}K';
-    }
-    return amount.toStringAsFixed(0);
-  }
-
   Future<void> refreshData() async {
     await loadInvoices();
+  }
+
+  double calculateInvoiceTotal(Map<String, dynamic> invoice) {
+    final items = invoice['items'] as List<dynamic>? ?? [];
+    double total = 0;
+    for (var item in items) {
+      total += (item['subTotal'] ?? 0).toDouble();
+    }
+    return total;
   }
 }

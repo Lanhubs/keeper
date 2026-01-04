@@ -5,9 +5,11 @@ import 'dart:convert';
 
 import 'package:keeper/constants/utils.dart';
 import 'package:keeper/core/helpers/toast_helper.dart';
+import 'package:keeper/core/controllers/home_controller.dart';
+import 'package:keeper/core/controllers/invoices_list_controller.dart';
 
 class InvoicesController extends GetxController {
-  final box = Hive.box("keeperBox");
+  final box = Hive.box("Invoices");
   final selectedDate = DateTime.now().obs;
 
   final showStatuses = false.obs;
@@ -162,32 +164,88 @@ class InvoicesController extends GetxController {
 
   Future<void> saveInvoice() async {
     if (items.isEmpty) {
-      ToastHelper.showError("No invoices to save");
+      ToastHelper.showError("No items added to invoice");
       return;
     }
+
+    if (invoiceTitle.value.isEmpty) {
+      ToastHelper.showError("Please enter invoice title");
+      return;
+    }
+
+    // Calculate total
+    totalAmount.value = 0;
+    for (var item in items) {
+      final subTotal = (item.amount * (item.quantity ?? 0));
+      totalAmount.value += subTotal;
+    }
+
     invoice.value = {
-      "title": invoiceTitle,
-      "note": invoiceDescription,
-      "items": items.map((item) => item.toJson()).toList(),
+      "id": invoiceId.value,
+      "title": invoiceTitle.value,
+      "note": invoiceDescription.value,
+      "date": selectedDate.value.toString().split(' ')[0],
+      "status": status.value.isEmpty ? "pending" : status.value.toLowerCase(),
+      "items": items
+          .map(
+            (item) => {
+              ...item.toJson(),
+              'subTotal': item.amount * (item.quantity ?? 0),
+            },
+          )
+          .toList(),
+      "totalAmount": totalAmount.value,
+      "createdAt": DateTime.now().toIso8601String(),
     };
 
-    final rawData = await box.get('Invoices');
-    List<Map<String, dynamic>> data = [];
+    final rawData = box.get('invoicesList');
+    List<dynamic> data = [];
     if (rawData != null) {
       try {
-        data = List<Map<String, dynamic>>.from(jsonDecode(rawData));
+        if (rawData is String) {
+          data = jsonDecode(rawData);
+        } else if (rawData is List) {
+          data = rawData;
+        }
       } catch (e) {
         ToastHelper.showError("Invalid data format in storage");
+        return;
       }
     }
-    invoices.value = data.map((item) => item).toList();
-    invoices.add(invoice);
-    var storeData = jsonEncode(invoices);
-    box.put("Invoices", storeData);
-    if (await box.get('Invoices') != null) {
-      ToastHelper.showSuccess("Invoice saved successfully");
-    } else {
-      ToastHelper.showError("Failed to save invoice");
+
+    data.add(invoice.value);
+    await box.put("invoicesList", data);
+
+    ToastHelper.showSuccess("Invoice created successfully");
+
+    // Notify other controllers to refresh their data
+    _notifyOtherControllers();
+
+    // Clear form
+    items.clear();
+    invoiceTitle.value = '';
+    invoiceDescription.value = '';
+    status.value = '';
+    totalAmount.value = 0;
+
+    Get.back(); // Close the modal
+  }
+
+  void _notifyOtherControllers() {
+    // Refresh HomeController
+    try {
+      final homeController = Get.find<HomeController>();
+      homeController.refreshData();
+    } catch (e) {
+      debugPrint('HomeController not found: $e');
+    }
+
+    // Refresh InvoicesListController
+    try {
+      final invoicesListController = Get.find<InvoicesListController>();
+      invoicesListController.refreshData();
+    } catch (e) {
+      debugPrint('InvoicesListController not found: $e');
     }
   }
 

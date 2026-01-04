@@ -1,52 +1,60 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import "package:keeper/core/widgets/ui/app_icon.dart";
 
 class ProfileBtn extends StatelessWidget {
-  final dynamic? icon;
+  final dynamic icon;
   final String label;
   final VoidCallback? clickHandler;
+  final bool isDestructive;
+
   const ProfileBtn({
     super.key,
-
     required this.clickHandler,
     required this.label,
     required this.icon,
+    this.isDestructive = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
       onTap: clickHandler,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 15),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(7),
+          borderRadius: BorderRadius.circular(12),
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              offset: Offset(1, 1),
-              blurRadius: 2,
-              color: Colors.grey.shade300,
-            ),
-
-            BoxShadow(
-              offset: Offset(1, 1),
-              blurRadius: 2,
-              color: Colors.grey.shade300,
+              offset: const Offset(0, 1),
+              blurRadius: 4,
+              color: Colors.grey.shade200,
             ),
           ],
         ),
         child: Row(
-          spacing: Get.width * 0.07,
           children: [
-            AppIcon(icon, size: 25),
-            Text(
-              label,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400),
+            AppIcon(
+              icon,
+              size: 22,
+              color: isDestructive ? Colors.red : Colors.grey.shade700,
             ),
-            Spacer(),
-            AppIcon(Icons.arrow_forward_ios, size: 25),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: isDestructive ? Colors.red : Colors.black87,
+                ),
+              ),
+            ),
+            AppIcon(
+              Icons.arrow_forward_ios,
+              size: 18,
+              color: Colors.grey.shade400,
+            ),
           ],
         ),
       ),

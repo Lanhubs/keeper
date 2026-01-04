@@ -23,6 +23,42 @@ class GeneralInvoicesCard extends StatelessWidget {
     this.date,
   });
 
+  Color _getStatusColor() {
+    switch (status?.toLowerCase()) {
+      case 'paid':
+        return Colors.green;
+      case 'overdue':
+        return Colors.red;
+      case 'pending':
+      default:
+        return Colors.orange;
+    }
+  }
+
+  Color _getStatusBgColor() {
+    switch (status?.toLowerCase()) {
+      case 'paid':
+        return Colors.green.shade100;
+      case 'overdue':
+        return Colors.red.shade100;
+      case 'pending':
+      default:
+        return Colors.orange.shade100;
+    }
+  }
+
+  String _getStatusText() {
+    switch (status?.toLowerCase()) {
+      case 'paid':
+        return 'Paid';
+      case 'overdue':
+        return 'Overdue';
+      case 'pending':
+      default:
+        return 'Pending';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -46,16 +82,16 @@ class GeneralInvoicesCard extends StatelessWidget {
                 "Invoice ID: #${invoiceId ?? '0'}",
                 style: TextStyle(fontSize: 12, color: Colors.grey),
               ),
-              Spacer(),
+              const Spacer(),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: Colors.green.shade100,
+                  color: _getStatusBgColor(),
                   borderRadius: BorderRadius.circular(5),
                 ),
                 child: Text(
-                  "Paid",
-                  style: TextStyle(fontSize: 12, color: Colors.green[500]),
+                  _getStatusText(),
+                  style: TextStyle(fontSize: 12, color: _getStatusColor()),
                 ),
               ),
             ],

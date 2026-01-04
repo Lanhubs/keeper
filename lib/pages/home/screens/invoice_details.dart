@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import "package:keeper/core/widgets/ui/app_icon.dart";
 
 class InvoiceDetails extends StatelessWidget {
@@ -7,28 +9,78 @@ class InvoiceDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String? invoiceId = Get.arguments as String?;
+    final box = Hive.box("Invoices");
+
+    // Load invoice data
+    Map<String, dynamic>? invoiceData;
+    if (invoiceId != null) {
+      final rawData = box.get('invoicesList');
+      if (rawData != null) {
+        List<dynamic> invoices = [];
+        if (rawData is String) {
+          invoices = jsonDecode(rawData);
+        } else if (rawData is List) {
+          invoices = rawData;
+        }
+        invoiceData = invoices.firstWhereOrNull(
+          (inv) => inv['id'].toString() == invoiceId,
+        );
+      }
+    }
+
+    if (invoiceData == null) {
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          leading: IconButton(
+            onPressed: () => Get.back(),
+            icon: const AppIcon(Icons.arrow_back, color: Colors.black),
+          ),
+        ),
+        body: const Center(child: Text('Invoice not found')),
+      );
+    }
+
+    final items = invoiceData['items'] as List<dynamic>? ?? [];
+    final totalAmount = invoiceData['totalAmount'] ?? 0.0;
+    final status = invoiceData['status'] ?? 'pending';
+    final title = invoiceData['title'] ?? 'Untitled';
+    final note = invoiceData['note'] ?? '';
+    final date = invoiceData['date'] ?? DateTime.now().toString().split(' ')[0];
+
+    Color getStatusColor() {
+      switch (status.toLowerCase()) {
+        case 'paid':
+          return Colors.green;
+        case 'overdue':
+          return Colors.red;
+        default:
+          return Colors.orange;
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: Get.height * 0.07,
         backgroundColor: Colors.white,
         leading: IconButton(
           onPressed: () => Get.back(),
-          icon: AppIcon(Icons.arrow_back, color: Colors.black),
+          icon: const AppIcon(Icons.arrow_back, color: Colors.black),
         ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 4,
           children: [
             Text.rich(
               TextSpan(
                 children: [
-                  TextSpan(
+                  const TextSpan(
                     text: "Invoice ",
                     style: TextStyle(fontSize: 16, color: Colors.black),
                   ),
                   TextSpan(
-                    text: "#12345",
-                    style: TextStyle(
+                    text: "#$invoiceId",
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF1E90FF),
@@ -37,9 +89,10 @@ class InvoiceDetails extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 4),
             Text(
-              "PURCHASAL INVOICE",
-              style: TextStyle(
+              title.toUpperCase(),
+              style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: Colors.grey,
@@ -49,44 +102,52 @@ class InvoiceDetails extends StatelessWidget {
         ),
         titleSpacing: 10,
         actions: [
-          IconButton(
-            onPressed: () {},
-            icon: AppIcon(Icons.notifications_outlined, color: Colors.black),
+          Container(
+            margin: const EdgeInsets.only(right: 16, top: 8, bottom: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: getStatusColor().withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              status.toUpperCase(),
+              style: TextStyle(
+                color: getStatusColor(),
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
           ),
         ],
-        actionsPadding: EdgeInsets.only(right: 20, top: 10, bottom: 10),
       ),
       body: SingleChildScrollView(
-        physics: BouncingScrollPhysics(),
+        physics: const BouncingScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 10,
           children: [
             Divider(height: 10, thickness: 2, color: Colors.grey.shade100),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-
                 children: [
                   Row(
-                    spacing: Get.width * 0.15,
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "Issued On",
+                          const Text(
+                            "Invoice Date",
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          SizedBox(height: 5),
+                          const SizedBox(height: 5),
                           Text(
-                            "July 01, 2024",
-                            style: TextStyle(
+                            date,
+                            style: const TextStyle(
                               fontSize: 16,
                               color: Colors.black,
                               fontWeight: FontWeight.w500,
@@ -94,99 +155,45 @@ class InvoiceDetails extends StatelessWidget {
                           ),
                         ],
                       ),
-
+                      SizedBox(width: Get.width * 0.15),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            "Due On",
+                          const Text(
+                            "Total Amount",
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-                          SizedBox(height: 5),
+                          const SizedBox(height: 5),
                           Text(
-                            "July 01, 2024",
-                            style: TextStyle(
+                            "₦${totalAmount.toStringAsFixed(2)}",
+                            style: const TextStyle(
                               fontSize: 16,
-                              color: Colors.black,
-                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF1E90FF),
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
                       ),
                     ],
                   ),
-                  SizedBox(height: 20),
-                  Text(
-                    "Invoice from",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  Text(
-                    "Akewusola",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                  ),
-                  SizedBox(height: 5),
-
-                  Text(
-                    "No.25 Akata Gado",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.grey,
-                    ),
-                  ),
                 ],
               ),
             ),
             Divider(height: 20, thickness: 2, color: Colors.grey.shade100),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    "Invoice to:",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey,
-                    ),
-                  ),
-
-                  Text(
-                    "Baba Bola",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                  ),
-                  SizedBox(height: 5),
-
-                  Text(
-                    "No.25 Akata Gado",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  Divider(
-                    height: 30,
-                    thickness: 2,
-                    color: Colors.grey.shade200,
-                  ),
-
-                  Text(
+                  const Text(
                     "Invoice Items",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   Table(
                     columnWidths: const {
                       0: FlexColumnWidth(3),
@@ -208,9 +215,9 @@ class InvoiceDetails extends StatelessWidget {
                     children: [
                       TableRow(
                         decoration: BoxDecoration(color: Colors.grey.shade200),
-                        children: [
+                        children: const [
                           Padding(
-                            padding: const EdgeInsets.symmetric(
+                            padding: EdgeInsets.symmetric(
                               vertical: 12.0,
                               horizontal: 8,
                             ),
@@ -224,7 +231,7 @@ class InvoiceDetails extends StatelessWidget {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.symmetric(
+                            padding: EdgeInsets.symmetric(
                               vertical: 12.0,
                               horizontal: 8,
                             ),
@@ -238,7 +245,7 @@ class InvoiceDetails extends StatelessWidget {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.symmetric(
+                            padding: EdgeInsets.symmetric(
                               vertical: 12.0,
                               horizontal: 8,
                             ),
@@ -252,7 +259,7 @@ class InvoiceDetails extends StatelessWidget {
                             ),
                           ),
                           Padding(
-                            padding: const EdgeInsets.symmetric(
+                            padding: EdgeInsets.symmetric(
                               vertical: 12.0,
                               horizontal: 8,
                             ),
@@ -267,88 +274,62 @@ class InvoiceDetails extends StatelessWidget {
                           ),
                         ],
                       ),
-                      TableRow(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 10.0,
-                              horizontal: 8,
+                      ...items.map((item) {
+                        final itemTitle = item['title'] ?? 'Untitled';
+                        final quantity = item['quantity'] ?? 0;
+                        final amount = item['amount'] ?? 0.0;
+                        final subTotal = item['subTotal'] ?? 0.0;
+
+                        return TableRow(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 10.0,
+                                horizontal: 8,
+                              ),
+                              child: Text(itemTitle),
                             ),
-                            child: Text('Cement'),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 10.0,
-                              horizontal: 8,
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 10.0,
+                                horizontal: 8,
+                              ),
+                              child: Text(quantity.toString()),
                             ),
-                            child: Text('10'),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 10.0,
-                              horizontal: 8,
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 10.0,
+                                horizontal: 8,
+                              ),
+                              child: Text('₦${amount.toStringAsFixed(2)}'),
                             ),
-                            child: Text('₦20'),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 10.0,
-                              horizontal: 8,
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 10.0,
+                                horizontal: 8,
+                              ),
+                              child: Text('₦${subTotal.toStringAsFixed(2)}'),
                             ),
-                            child: Text('₦200'),
-                          ),
-                        ],
-                      ),
-                      TableRow(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 10.0,
-                              horizontal: 8,
-                            ),
-                            child: Text('Sand'),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 10.0,
-                              horizontal: 8,
-                            ),
-                            child: Text('5'),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 10.0,
-                              horizontal: 8,
-                            ),
-                            child: Text('₦15'),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 10.0,
-                              horizontal: 8,
-                            ),
-                            child: Text('₦75'),
-                          ),
-                        ],
-                      ),
-                      // Add more TableRows for more items if needed
+                          ],
+                        );
+                      }).toList(),
                     ],
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                      const Text(
                         "Total: ",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
                       ),
-                      SizedBox(width: 10),
+                      const SizedBox(width: 10),
                       Text(
-                        "₦275.00",
-                        style: TextStyle(
+                        "₦${totalAmount.toStringAsFixed(2)}",
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
                           color: Color(0xFF1E90FF),
@@ -356,26 +337,38 @@ class InvoiceDetails extends StatelessWidget {
                       ),
                     ],
                   ),
-
-                  SizedBox(height: 20),
-
-                  Container(
-                    padding: EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.shade50,
-                      borderRadius: BorderRadius.circular(7),
-                    ),
-                    child: Text(
-                      "Note: Please make sure to obtain the total amount by the due date to avoid any late fees.",
-                      overflow: TextOverflow.visible,
-                      softWrap: true,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade700,
-                        fontWeight: FontWeight.w500,
+                  if (note.isNotEmpty) ...[
+                    const SizedBox(height: 20),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(7),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Note:",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            note,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade700,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
+                  ],
+                  const SizedBox(height: 80),
                 ],
               ),
             ),
@@ -387,18 +380,19 @@ class InvoiceDetails extends StatelessWidget {
         height: 70,
         decoration: BoxDecoration(
           color: Colors.white,
-          border: BoxBorder.fromLTRB(
+          border: Border(
             top: BorderSide(color: Colors.grey.shade300, width: 1),
           ),
         ),
-        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         child: Row(
-          spacing: Get.width * 0.05,
           children: [
             TextButton(
-              onPressed: () {},
-              child: Text(
-                "Preview",
+              onPressed: () {
+                // TODO: Implement preview/print functionality
+              },
+              child: const Text(
+                "Print",
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
@@ -406,43 +400,21 @@ class InvoiceDetails extends StatelessWidget {
                 ),
               ),
             ),
-            // SizedBox(
-            //   width: Get.width *0.2,
-            //   child: ElevatedButton(
-            //     onPressed: () {
-            //       // Handle invoice creation logic
-            //     },
-            //     style: ElevatedButton.styleFrom(
-            //       minimumSize: Size(double.infinity, 50),
-            //       backgroundColor: Colors.grey.shade100,
-            //       shape: RoundedRectangleBorder(
-            //         side: BorderSide(color: Colors.grey.shade400, width: 1),
-            //         borderRadius: BorderRadius.circular(7),
-            //       ),
-            //     ),
-            //     child: Text(
-            //       "Draft",
-            //       style: TextStyle(
-            //         color: Colors.grey.shade800,
-            //         fontWeight: FontWeight.w500,
-            //       ),
-            //     ),
-            //   ),
-            // ),
+            const Spacer(),
             Expanded(
               child: ElevatedButton(
                 onPressed: () {
-                  // Handle invoice creation logic
+                  // TODO: Implement share functionality
                 },
                 style: ElevatedButton.styleFrom(
-                  minimumSize: Size(double.infinity, 50),
-                  backgroundColor: Color(0xFF1E90FF),
+                  minimumSize: const Size(double.infinity, 50),
+                  backgroundColor: const Color(0xFF1E90FF),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(7),
                   ),
                 ),
-                child: Text(
-                  "Send Invoice",
+                child: const Text(
+                  "Share Invoice",
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w500,

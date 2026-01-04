@@ -14,6 +14,7 @@ class InvoiceCard extends StatelessWidget {
   final double? height;
   final String? invoiceId;
   final bool? showDivider;
+
   const InvoiceCard({
     super.key,
     this.showDivider = true,
@@ -27,81 +28,130 @@ class InvoiceCard extends StatelessWidget {
     this.date,
   });
 
+  Color _getStatusColor() {
+    switch (status?.toLowerCase()) {
+      case 'paid':
+        return Colors.green;
+      case 'overdue':
+        return Colors.red;
+      case 'pending':
+      default:
+        return Colors.orange;
+    }
+  }
+
+  Color _getStatusBgColor() {
+    switch (status?.toLowerCase()) {
+      case 'paid':
+        return Colors.green.shade100;
+      case 'overdue':
+        return Colors.red.shade100;
+      case 'pending':
+      default:
+        return Colors.orange.shade100;
+    }
+  }
+
+  String _getStatusText() {
+    switch (status?.toLowerCase()) {
+      case 'paid':
+        return 'Paid';
+      case 'overdue':
+        return 'Overdue';
+      case 'pending':
+      default:
+        return 'Pending';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(10),
-      width: width ?? Get.width * 0.65,
-      height: height ?? Get.height * 0.15,
-      margin: EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(7),
-        boxShadow: [
-          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                "Invoice ID: #${invoiceId ?? '0'}",
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-              Spacer(),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.green.shade100,
-                  borderRadius: BorderRadius.circular(5),
+    return GestureDetector(
+      onTap: () {
+        Get.toNamed(AppRoutes.invoicePreview, arguments: invoiceId);
+      },
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        width: width ?? Get.width * 0.65,
+        height: height ?? Get.height * 0.15,
+        margin: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(7),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    "Invoice ID: #${invoiceId ?? '0'}",
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                child: Text(
-                  "Paid",
-                  style: TextStyle(fontSize: 12, color: Colors.green[500]),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _getStatusBgColor(),
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: Text(
+                    _getStatusText(),
+                    style: TextStyle(fontSize: 12, color: _getStatusColor()),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          Text(
-            title ?? 'Untitled',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 5),
-          Text(date ?? '-', style: TextStyle(fontSize: 14, color: Colors.grey)),
-          SizedBox(height: 5),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "₦${amount ?? '0'}",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E90FF),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title ?? 'Untitled',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              date ?? '-',
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            const Spacer(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "₦${amount ?? '0'}",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1E90FF),
+                  ),
                 ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  // Navigate to invoice details page
-                  Get.toNamed(AppRoutes.invoicePreview, arguments: invoiceId);
-                },
-                child: Row(
-                  spacing: 5,
-                  children: [
-                    AppIcon(
-                      HugeIcons.strokeRoundedShare01,
-                      color: Color(0xFF1E90FF),
-                      size: 16,
-                    ),
-                  ],
+                GestureDetector(
+                  onTap: () {
+                    Get.toNamed(AppRoutes.invoicePreview, arguments: invoiceId);
+                  },
+                  child: const AppIcon(
+                    HugeIcons.strokeRoundedShare01,
+                    color: Color(0xFF1E90FF),
+                    size: 16,
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

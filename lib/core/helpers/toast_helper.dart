@@ -4,13 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../widgets/ui/app_icon.dart';
 
-/// Utility class for showing toast notifications throughout the app
-/// Ensures only one toast is shown at a time and provides consistent styling
 class ToastHelper {
-  // Track the current toast to dismiss it when showing a new one
   static ToastificationItem? _currentToast;
 
-  /// Dismisses any currently showing toast
   static void dismissCurrent() {
     if (_currentToast != null) {
       toastification.dismiss(_currentToast!);
@@ -18,7 +14,6 @@ class ToastHelper {
     }
   }
 
-  /// Show a success toast message
   static void showSuccess(String message, {Duration? duration}) {
     dismissCurrent();
     _currentToast = toastification.show(
@@ -40,7 +35,6 @@ class ToastHelper {
     );
   }
 
-  /// Show an error toast message
   static void showError(String message, {Duration? duration}) {
     dismissCurrent();
     _currentToast = toastification.show(
@@ -59,7 +53,6 @@ class ToastHelper {
     );
   }
 
-  /// Show an info toast message
   static void showInfo(String message, {Duration? duration}) {
     dismissCurrent();
     _currentToast = toastification.show(
@@ -81,7 +74,6 @@ class ToastHelper {
     );
   }
 
-  /// Show a warning toast message
   static void showWarning(String message, {Duration? duration}) {
     dismissCurrent();
     _currentToast = toastification.show(
