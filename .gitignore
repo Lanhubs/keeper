@@ -17,6 +17,7 @@ build
 ./windows
 ./macos
 ./build
+./web
 
 # IntelliJ related
 *.iml
