@@ -13,6 +13,10 @@
 migrate_working_dir/
 windows
 macos
+build
+./windows
+./macos
+./build
 
 # IntelliJ related
 *.iml
