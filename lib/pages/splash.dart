@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:keeper/constants/utils.dart';
 
 class Splash extends StatefulWidget {
@@ -49,8 +50,19 @@ class _SplashState extends State<Splash> with SingleTickerProviderStateMixin {
     _controller.forward();
 
     Future.delayed(const Duration(seconds: 2), () {
-      Get.offNamed(AppRoutes.home);
+      _checkOnboardingStatus();
     });
+  }
+
+  void _checkOnboardingStatus() {
+    final box = Hive.box("Settings");
+    final hasSeenOnboarding = box.get('hasSeenOnboarding', defaultValue: false);
+
+    if (hasSeenOnboarding) {
+    //   Get.offNamed(AppRoutes.home);
+    // } else {
+      Get.offNamed(AppRoutes.onboarding);
+    }
   }
 
   @override

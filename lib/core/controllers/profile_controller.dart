@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:keeper/core/helpers/storage_helper.dart';
 
 class ProfileController extends GetxController {
   final box = Hive.box("Settings");
@@ -10,11 +11,13 @@ class ProfileController extends GetxController {
   final RxString businessName = ''.obs;
   final RxString phoneNumber = ''.obs;
   final RxString address = ''.obs;
+  final RxMap<String, int> storageStats = <String, int>{}.obs;
 
   @override
   void onInit() {
     super.onInit();
     loadProfile();
+    loadStorageStats();
   }
 
   void loadProfile() {
@@ -23,6 +26,15 @@ class ProfileController extends GetxController {
     businessName.value = box.get('businessName', defaultValue: 'Business Name');
     phoneNumber.value = box.get('phoneNumber', defaultValue: '');
     address.value = box.get('address', defaultValue: '');
+  }
+
+  Future<void> loadStorageStats() async {
+    storageStats.value = await StorageHelper.getStorageStats();
+  }
+
+  Future<void> optimizeStorage() async {
+    await StorageHelper.optimizeStorage();
+    await loadStorageStats();
   }
 
   Future<void> updateProfile({

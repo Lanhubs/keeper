@@ -188,6 +188,14 @@ class Profile extends GetView {
                   const SizedBox(height: 10),
                   ProfileBtn(
                     clickHandler: () {
+                      _showOptimizeStorageDialog(context);
+                    },
+                    label: "Optimize Storage",
+                    icon: HugeIcons.strokeRoundedCleaningBucket,
+                  ),
+                  const SizedBox(height: 10),
+                  ProfileBtn(
+                    clickHandler: () {
                       _showClearDataDialog(context);
                     },
                     label: "Clear All Data",
@@ -311,6 +319,48 @@ class Profile extends GetView {
               'Clear Data',
               style: TextStyle(color: Colors.red),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showOptimizeStorageDialog(BuildContext context) {
+    Get.dialog(
+      AlertDialog(
+        title: const Text('Optimize Storage'),
+        content: Obx(
+          () => Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Current storage usage:'),
+              const SizedBox(height: 12),
+              Text('Invoices: ${controller.storageStats['invoices'] ?? 0}'),
+              Text('Clients: ${controller.storageStats['clients'] ?? 0}'),
+              const SizedBox(height: 12),
+              const Text(
+                'This will remove old data (older than 1 year) and compact the database.',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Get.back(), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () async {
+              await controller.optimizeStorage();
+              Get.back();
+              Get.snackbar(
+                'Success',
+                'Storage optimized successfully',
+                snackPosition: SnackPosition.BOTTOM,
+                backgroundColor: Colors.green,
+                colorText: Colors.white,
+              );
+            },
+            child: const Text('Optimize'),
           ),
         ],
       ),

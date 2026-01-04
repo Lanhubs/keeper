@@ -6,6 +6,8 @@ import 'package:keeper/pages/home/screens/invoices/widgets/create_invoice_modal.
 import "package:keeper/core/widgets/ui/app_icon.dart";
 
 class ExpandableFab extends StatefulWidget {
+  const ExpandableFab({super.key});
+
   @override
   _ExpandableFabState createState() => _ExpandableFabState();
 }

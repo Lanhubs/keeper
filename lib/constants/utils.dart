@@ -5,6 +5,7 @@ import 'package:keeper/pages/home/screens/addClient/add_client.dart';
 import 'package:keeper/pages/home/screens/clients/clients.dart';
 import 'package:keeper/pages/home/screens/invoice_details.dart';
 import 'package:keeper/pages/home/screens/invoices/widgets/create_invoice_modal.dart';
+import 'package:keeper/pages/onboarding/onboarding.dart';
 import 'package:keeper/pages/splash.dart';
 
 class AppRoutes {
@@ -24,25 +25,16 @@ class AppRoutes {
   static const String splash = '/splash';
   static const String clients = '/clients';
   static const String createInvoice = '/createInvoice';
+  static const String onboarding = '/onboarding';
 
   static List<GetPage> pages = [
-    GetPage(name: splash, page: () => Splash()),
-    GetPage(name: home, page: () => MainHome()),
+    GetPage(name: splash, page: () => const Splash()),
+    GetPage(name: onboarding, page: () => const Onboarding()),
+    GetPage(name: home, page: () => const MainHome()),
     GetPage(name: addClient, page: () => AddClient()),
-    GetPage(
-      name: invoicePreview,
-      page: () => const InvoiceDetails(),
-    ), // Placeholder for invoice preview
+    GetPage(name: invoicePreview, page: () => const InvoiceDetails()),
     GetPage(name: login, page: () => const Login()),
-    GetPage(name: clients, page: () =>  Clients()),
-    GetPage(name: createInvoice, page: () =>  CreateInvoiceModal()),
-    // GetPage(name: settings, page: () => const Settings()),
-    // GetPage(name: terms, page: () => const Terms()),
-    // GetPage(name: privacy, page: () => const Privacy()),
-    // GetPage(name: help, page: () => const Help()),
-    // GetPage(name: feedback, page: () => const Feedback()),
-    // GetPage(name: notifications, page: () => const Notifications()),
-    // GetPage(name: search, page: () => const Search()),
-    // GetPage(name: favorites, page: () => const Favorites()),
+    GetPage(name: clients, page: () => Clients()),
+    GetPage(name: createInvoice, page: () => CreateInvoiceModal()),
   ];
 }
